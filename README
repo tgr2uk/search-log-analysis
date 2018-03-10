@@ -1,0 +1,27 @@
+Overall process for clustering AOL sessions
+===========================================
+
+Remove queries that are just ‘-‘
+> awk '!/\t-\t/' fullcollection.1000000 > fullcollection.1000000.filtered
+
+
+Extract the feature vectors:
+> python parseN.py -v fullcollection.1000000
+
+
+Select a sample from the output.log:
+> python selectRandomVectors.py output.log -s 100000 > 100000.sample1
+(times N)
+
+Edit the ARFFheader to suit the data 
+(textedit)
+
+Prepend the appropriate weka header
+> cat ARFFheader 100000.sample1 > ARFF/100000.sample1.arff
+(times N)
+
+Apply feature scaling:
+> python normalise_sessions.py ARFF/100000.sample1.arff > ARFF/100000.sample1.norm.arff
+(times N)
+
+Cluster using weka
