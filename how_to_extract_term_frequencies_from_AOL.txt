@@ -1,0 +1,45 @@
+How to extract a term frequency list from AOL
+
+Extract queries from the log, i.e. the 2nd field:
+> awk 'BEGIN { FS = "\t" } ; { print $2 }' fullcollection.txt > aolquerylist.txt
+
+Note that technically the 2nd field contains the query, but this does NOT imply
+that the user’s action was necessarily a query (it could have been a click
+or page operation). So it’s an open question whether the query list from which stats
+are generated should contain ONLY those which we know are query actions, i.e. 
+whether we should ignore any queries that appear to be a subcomponent of page or
+click actions. 
+
+We’ll keep it inclusive/simple for now, and extract ALL queries. 
+
+Now split all the terms onto their own line:
+> awk '{ for (i=1; i<=NF; i++) print $i }' aolquerylist.txt > k2
+
+Now sort the output
+> sort k2 > k3
+
+The merge and count the lines:
+> uniq -c k3 > k4
+
+And sort in descending order:
+> sort -rn k4 > k5
+
+You can of course do all this in one line:
+> sort j | uniq -c | sort -rn
+ 
+Replace the space delimiter with a comma to make subsequent processing easier:
+> cat > format_as_csv.awk
+# reformat a query wfl to facilitate reading into Python as a dict
+
+BEGIN { print "query,freq" }
+
+{
+    freq = $1
+    sub(/ *[0-9]+ /, "");
+    query = $0
+    printf "%s,%d\n", query, freq
+}
+
+> awk -f format_as_csv.awk j4 > aolquerylist.csv
+
+
